@@ -1,4 +1,3 @@
-#include "bitmap.h"
 #include <avr/interrupt.h>
 #include <avr/io.h>
 #include <avr/pgmspace.h>
@@ -11,7 +10,7 @@
 #define START 0x08
 #define MT_DATA_ACK 0x28
 #define MT_SLA_ACK 0x18
-#define TWI_FREQ 100000L
+#define TWI_FREQ 800000L
 
 #define SSD1306_ADDRESS_WRITE 0x78
 #define CONTROL_MULTIPLEDATA_DATA 0x40
@@ -20,6 +19,10 @@
 #define CONTROL_SINGLEDATA_COMMAND 0x80
 #define SCREEN_WIDTH 128
 #define PAGE_SIZE 8
+
+
+void draw_pixel(uint8_t x, uint8_t y);
+void clear_pixel(uint8_t x, uint8_t y);
 
 uint8_t framebuffer[1024] = {0x00};
 
@@ -129,45 +132,18 @@ void ssd1306_init() {
 }
 
 void clear_screen() {
-  /* int i = 4;
-  while (i--) {
-    i2c_send_start_bit();
-    i2c_send_address(SSD1306_ADDRESS_WRITE);
-    i2c_send_byte(CONTROL_MULTIPLEDATA_DATA);
-    for (int i = 0; i < 32; i++) {
-      i2c_send_byte(0x00);
+  for(int i = 0; i < 128; i++) {
+    for(int j = 0; j < 64; j++) {
+        clear_pixel(i, j);
     }
-    i2c_send_stop();
-  } */
-  for (int page = 0; page < 8; page++) {
-    i2c_send_start_bit();
-    i2c_send_address(SSD1306_ADDRESS_WRITE);
-    i2c_send_byte(CONTROL_MULTIPLEDATA_COMMAND);
-    i2c_send_byte(0xB0 | page);
-    i2c_send_byte(0x00);
-    i2c_send_byte(0x10);
-    i2c_send_stop();
-
-    i2c_send_start_bit();
-    i2c_send_address(SSD1306_ADDRESS_WRITE);
-    i2c_send_byte(CONTROL_MULTIPLEDATA_DATA);
-
-    for (int i = 0; i < 128; i++) {
-      i2c_send_byte(0x00);
-    }
-    i2c_send_stop();
   }
 }
 
 void fill_screen() {
-  for (int page = 0; page < 8; page++) {
-    i2c_send_start_bit();
-    i2c_send_address(SSD1306_ADDRESS_WRITE);
-    i2c_send_byte(CONTROL_MULTIPLEDATA_DATA);
-    for (int i = 0; i < 128; i++) {
-      i2c_send_byte(0xFF);
+  for(int i = 0; i < 128; i++) {
+    for(int j = 0; j < 64; j++) {
+        draw_pixel(i, j);
     }
-    i2c_send_stop();
   }
 }
 
@@ -203,47 +179,93 @@ void draw_pixel(uint8_t x, uint8_t y) {
   framebuffer[(row) * 128 + col] |= (1 << bit_position);
 } // there is a little offset, need to resolve that
 
+void clear_pixel(uint8_t x, uint8_t y) {
+  // (x, y) is pixel coordinate
+  // origin is top left
+  // positive direction of x is same (right), for y positive direction is down
+  uint8_t col = x;
+  uint8_t row = (y / 8);    // find out which page this pixel belongs to
+  uint8_t bit_position = y % 8; // find out which bit does the 'y' corresponds to in the byte
+  framebuffer[(row) * 128 + col] &= ~(1 << bit_position);
+} 
+
 void draw_line(uint8_t start_x, uint8_t start_y, uint8_t finish_x, uint8_t finish_y) {
-  /* float m = (float) (finish_y - start_y) / (finish_x - start_x);
-  uint8_t x = start_x;
-  uint8_t y; 
-  while(x != finish_x) {
-    y = m * (x - start_x) + start_y;
-    draw_pixel(x++, y);
-  } */
-  
   // Bresenham's line drawing algorithm
-  // |m| < 1
-  int dx = fabs(start_x - finish_x), dy = fabs(start_y - finish_y);
-  int x, y;
-  int twody = 2 * dy;
-  int twodyminusdx = 2 * (dy - dx);
-  int p = 2 * dy - dx;
-  if(start_x > finish_x) {
-    x = finish_x;
-    y = finish_y;
-    finish_x = start_x;
+  int dx = finish_x - start_x, dy = finish_y - start_y;
+  int x = start_x, y = start_y;
+  int p_initial, p_inc, p_inc_xy;
+  int x_inc = 1;
+  int y_inc = 1;
+ 
+  if(dy < 0) {
+    y_inc = -1;
+    dy = -dy; // check wikipedia pseudocode
+  }
+  if(dx < 0) {
+    x_inc = -1;
+    dx = -dx;
+  }
+
+  if(dy < dx) {
+    p_initial = 2 * dy - dx;
+    p_inc = 2 * dy;
+    p_inc_xy = 2 * (dy - dx);
   }
   else {
-    x = start_x;
-    y = start_y;
+    p_initial = 2 * dx - dy;
+    p_inc = 2 * dx;
+    p_inc_xy = 2 * (dx - dy);
   }
   
+  int p = p_initial;
   draw_pixel(x, y);
-  while(x < finish_x) {
-    x++;
+  while((x != finish_x && y != finish_y)) {
+    if(dy < dx)
+      x += x_inc;
+    else
+      y += y_inc;
+    
     if(p < 0) {
-      p += twody;
+      p += p_inc;
     }
     else {
-      y++;
-      p += twodyminusdx;
+      if(dy < dx)
+        y += y_inc;
+      else
+        x += x_inc;
+      p += p_inc_xy;
     }
     draw_pixel(x, y);
   }
-  
-  
-  
+}
+
+int edge_function(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t x, uint8_t y) {
+  return (int)(x2 - x1) * (y - y1) - (y2 - y1) * (x - x1);
+}
+
+void draw_triangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t x3, uint8_t y3) {
+  for(int i = 0; i < 128; i++) {
+    for(int j = 0; j < 64; j++) {
+      int abp = edge_function(x1, y1, x2, y2, i, j);
+      int bcp = edge_function(x2, y2, x3, y3, i, j);
+      int cap = edge_function(x3, y3, x1, y1, i, j);
+
+      if((abp >= 0 && bcp >= 0 && cap >= 0) || (abp <= 0 && bcp <= 0 && cap <= 0)) {
+        draw_pixel(i, j);
+      }
+    }
+  }
+}
+
+void draw_poly_line(uint8_t *points, size_t size, bool is_loop) {
+  int i = 0;
+  for(i = 0; i < size/2; i+=2) {
+    draw_line(points[i], points[i+1], points[i+2], points[i+3]);
+  }
+
+  if(is_loop) {
+    draw_line(points[i], points[i+1], points[0], points[1]);
+  }
 }
 
 int main(void) {
@@ -252,12 +274,16 @@ int main(void) {
   ssd1306_init();
   _delay_ms(500);
   clear_screen();
-  draw_line(0, 0, 50, 63);
+  uint8_t points[] = {0, 0, 40, 13, 89, 43};
+  draw_poly_line(points, sizeof(points), true);
   fill_screen_with_buffer();
   // fill_screen();
   //_delay_ms(1000);
   while (1) {
-    //fill_screen_with_buffer();
+    for(int i = 50; i < 128; i++) {
+      //draw_triangle(15, 15, i, 0, 63, 63);
+      //fill_screen_with_buffer();
+      //clear_screen();
+    }
   }
-  return 0;
 }
