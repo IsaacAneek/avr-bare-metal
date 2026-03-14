@@ -10,7 +10,7 @@
 #define START 0x08
 #define MT_DATA_ACK 0x28
 #define MT_SLA_ACK 0x18
-#define TWI_FREQ 400000L
+#define TWI_FREQ 800000L
 
 #define SSD1306_ADDRESS_WRITE 0x78
 #define CONTROL_MULTIPLEDATA_DATA 0x40
@@ -48,9 +48,9 @@ uint8_t ssd1306_init_commands[] = {
     0x3F, // set mux ratio value
     0xC0, // com scan direction
     0xD9, // set pre charge period cmd
-    0x22, // pre charge value
+    0x22, // pre charge value (see datasheet page 32)
     0xD5, // set display clock cmd
-    0x80, // set display clock value
+    0xF0, // set display clock value (max clock)
     // 0x22, // set page address cmd
     // 0x00, // set page start addr to 0
     // 0x07, // set page end addr to 7
@@ -293,14 +293,15 @@ int main(void) {
   clear_screen();
   uint8_t points[] = {0, 0, 40, 13, 89, 43};
   //draw_poly_line(points, sizeof(points), true);
-  draw_triangle(15, 15, 50, 0, 63, 63);
-  draw_line(0, 0, 25, 63);
+  //draw_triangle(15, 15, 50, 0, 63, 63);
+  //draw_line(0, 0, 25, 63);
   fill_screen_with_buffer();
   // fill_screen();
   //_delay_ms(1000);
   while (1) {
     for(int i = 50; i < 128; i++) {
-      //fill_screen_with_buffer();
+      draw_line(0, 63, i, 0);
+      fill_screen_with_buffer();
       //clear_screen();
     }
   }
