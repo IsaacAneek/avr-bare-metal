@@ -18,6 +18,13 @@ I managed to write a couple of driver codes for different features from scratch 
        - [x] 800khz
      - [ ] Try high speed SPI
      - [ ] SPI + DMA
+     - [ ] Use vertical/horizontal addressing mode
+     - [ ] Use bit-wise operation instead of modular arithmetic
+     - [ ] Profile and mitigate function call overhead
+     - [ ] Try to write a branchless code for line and triangle rasterizer
+     - [ ] Try using scan-line fill instead of edge function for triangle rasterization
+     - [ ] Optimize draw_pixel() using lookup tables?
+     - [ ] Remove the modular arithemetic and division operation in draw_pixel() function
    - [ ] High display refresh rate
      - [x] Increase oscillator frequency
      - [ ] Use external oscillator
