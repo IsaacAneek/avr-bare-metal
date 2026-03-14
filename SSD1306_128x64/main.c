@@ -10,7 +10,7 @@
 #define START 0x08
 #define MT_DATA_ACK 0x28
 #define MT_SLA_ACK 0x18
-#define TWI_FREQ 800000L
+#define TWI_FREQ 400000L
 
 #define SSD1306_ADDRESS_WRITE 0x78
 #define CONTROL_MULTIPLEDATA_DATA 0x40
@@ -20,6 +20,8 @@
 #define SCREEN_WIDTH 128
 #define PAGE_SIZE 8
 
+#define CLEAR_PIN_7 PORTD &= ~(1 << PORTD7);
+#define SET_PIN_7 PORTD |= (1 << PORTD7);
 
 void draw_pixel(uint8_t x, uint8_t y);
 void clear_pixel(uint8_t x, uint8_t y);
@@ -148,6 +150,10 @@ void fill_screen() {
 }
 
 void fill_screen_with_buffer() {
+  // takes roughly around 16ms@800Kbps
+  // takes roughly around 26.832ms@400Kbps
+  // overhead 5.168ms and I2C 10.832ms @800Kbps
+  SET_PIN_7
   uint16_t count = 0;
   for (int page = 0; page < 8; page++) {
     i2c_send_start_bit();
@@ -167,6 +173,7 @@ void fill_screen_with_buffer() {
     }
     i2c_send_stop();
   }
+  CLEAR_PIN_7
 }
 
 void draw_pixel(uint8_t x, uint8_t y) {
@@ -190,6 +197,8 @@ void clear_pixel(uint8_t x, uint8_t y) {
 } 
 
 void draw_line(uint8_t start_x, uint8_t start_y, uint8_t finish_x, uint8_t finish_y) {
+  // takes roughly around 203uS
+  SET_PIN_7
   // Bresenham's line drawing algorithm
   int dx = finish_x - start_x, dy = finish_y - start_y;
   int x = start_x, y = start_y;
@@ -237,6 +246,7 @@ void draw_line(uint8_t start_x, uint8_t start_y, uint8_t finish_x, uint8_t finis
     }
     draw_pixel(x, y);
   }
+  CLEAR_PIN_7
 }
 
 int edge_function(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t x, uint8_t y) {
@@ -244,6 +254,8 @@ int edge_function(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t x, uin
 }
 
 void draw_triangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t x3, uint8_t y3) {
+  // takes roughly around 14ms
+  SET_PIN_7
   for(int i = 0; i < 128; i++) {
     for(int j = 0; j < 64; j++) {
       int abp = edge_function(x1, y1, x2, y2, i, j);
@@ -255,9 +267,11 @@ void draw_triangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t x3, u
       }
     }
   }
+  CLEAR_PIN_7
 }
 
 void draw_poly_line(uint8_t *points, size_t size, bool is_loop) {
+  PORTD |= (1 << PORTD7);
   int i = 0;
   for(i = 0; i < size/2; i+=2) {
     draw_line(points[i], points[i+1], points[i+2], points[i+3]);
@@ -266,22 +280,26 @@ void draw_poly_line(uint8_t *points, size_t size, bool is_loop) {
   if(is_loop) {
     draw_line(points[i], points[i+1], points[0], points[1]);
   }
+  PORTD &= ~(1 << PORTD7);
 }
 
 int main(void) {
+  DDRD |= (1 << PORTD7);
+  PORTD &= ~(1 << PORTD7);
   i2c_init();
   _delay_ms(100);
   ssd1306_init();
   _delay_ms(500);
   clear_screen();
   uint8_t points[] = {0, 0, 40, 13, 89, 43};
-  draw_poly_line(points, sizeof(points), true);
+  //draw_poly_line(points, sizeof(points), true);
+  draw_triangle(15, 15, 50, 0, 63, 63);
+  draw_line(0, 0, 25, 63);
   fill_screen_with_buffer();
   // fill_screen();
   //_delay_ms(1000);
   while (1) {
     for(int i = 50; i < 128; i++) {
-      //draw_triangle(15, 15, i, 0, 63, 63);
       //fill_screen_with_buffer();
       //clear_screen();
     }
