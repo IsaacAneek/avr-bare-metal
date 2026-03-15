@@ -183,19 +183,26 @@ void draw_pixel(uint8_t x, uint8_t y) {
   // origin is top left
   // positive direction of x is same (right), for y positive direction is down
   uint8_t col = x;
-  uint8_t row = (y / 8);    // find out which page this pixel belongs to
-  uint8_t bit_position = y % 8; // find out which bit does the 'y' corresponds to in the byte
-  framebuffer[(row) * 128 + col] |= (1 << bit_position);
-} // there is a little offset, need to resolve that
 
+  uint8_t row = (y >> 3);
+  // find out which page this pixel belongs to
+  // y/8 is equivalent to y >> 3
+
+  uint8_t bit_position = y & 7; 
+  // find out which bit does the 'y' corresponds to in the byte
+  // y % 8 is equivalent to y & (8-1)
+
+  framebuffer[(row << 7) + col] |= (1 << bit_position);
+  // row*128 is equivalent to row << 7
+}
 void clear_pixel(uint8_t x, uint8_t y) {
   // (x, y) is pixel coordinate
   // origin is top left
   // positive direction of x is same (right), for y positive direction is down
   uint8_t col = x;
-  uint8_t row = (y / 8);    // find out which page this pixel belongs to
-  uint8_t bit_position = y % 8; // find out which bit does the 'y' corresponds to in the byte
-  framebuffer[(row) * 128 + col] &= ~(1 << bit_position);
+  uint8_t row = (y >> 3);    // find out which page this pixel belongs to
+  uint8_t bit_position = y & 7; // find out which bit does the 'y' corresponds to in the byte
+  framebuffer[(row << 7) + col] &= ~(1 << bit_position);
 } 
 
 void draw_line(uint8_t start_x, uint8_t start_y, uint8_t finish_x, uint8_t finish_y) {
@@ -313,7 +320,7 @@ int main(void) {
   while (1) {
     for(int i = 50; i < 100; i++) {
       //draw_line(0, 63, i, 0);
-      draw_bitmap(slick_arrow_delta, sizeof(slick_arrow_delta), i, 2);
+      draw_bitmap(slick_arrow_delta, sizeof(slick_arrow_delta), 100-i, 2);
       fill_screen_with_buffer();
       //clear_screen();
     }
