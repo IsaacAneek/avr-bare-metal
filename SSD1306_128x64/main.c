@@ -21,6 +21,9 @@
 #define SCREEN_WIDTH 128
 #define PAGE_SIZE 8
 
+#define VERTICAL_ADDRESSING_MODE
+// #define PAGE_ADDRESSING_MODE
+
 #define CLEAR_PIN_7 PORTD &= ~(1 << PORTD7);
 #define SET_PIN_7 PORTD |= (1 << PORTD7);
 
@@ -36,13 +39,14 @@ uint8_t ssd1306_init_commands[] = {
     0x7F, // set contrast value
     0xA6, // normal (non-inverted) display mode
     0x20, // set addressing mode command
-    0x02, // page addressing mode
-    0xB0, // set page start
-    0x00, // set lower column address (page)
-    0x10, // set upper column address (page)
-    // 0x21, // set col address cmd
-    // 0x00, // set col start to 0
-    // 0x7F, // set col end adderss to 127
+    0x00, // horizontal addressing mode
+    // 0x02, // page addressing mode
+    // 0xB0, // set page start
+    // 0x00, // set lower column address (page)
+    // 0x10, // set upper column address (page)
+    0x21, // set col address cmd (v/h)
+    0x00, // set col start to 0 (v/h)
+    0x7F, // set col end adderss to 127 (v/h)
     0x40, // set display start line
     0xA0, // col 0 is mapped to seg 0
     0xA8, // set mux ratio cmd
@@ -52,9 +56,9 @@ uint8_t ssd1306_init_commands[] = {
     0x22, // pre charge value (see datasheet page 32)
     0xD5, // set display clock cmd
     0xF0, // set display clock value (max clock)
-    // 0x22, // set page address cmd
-    // 0x00, // set page start addr to 0
-    // 0x07, // set page end addr to 7
+    0x22, // set page address cmd (v/h)
+    0x00, // set page start addr to 0 (v/h)
+    0x07, // set page end addr to 7 (v/h)
     0xD3, // display offset cmd
     0x00, // set display offset to 0
     0xDA, // set COM pin hardware config
@@ -156,6 +160,8 @@ void fill_screen_with_buffer() {
   // takes roughly around 26.832ms@400Kbps
   // overhead 5.168ms and I2C 10.832ms? @800Kbps
   SET_PIN_7
+
+  #ifdef PAGE_ADDRESSING_MODE
   uint16_t count = 0;
   for (int page = 0; page < 8; page++) {
     i2c_send_start_bit();
@@ -175,6 +181,16 @@ void fill_screen_with_buffer() {
     }
     i2c_send_stop();
   }
+  #endif
+  #ifdef VERTICAL_ADDRESSING_MODE
+    i2c_send_start_bit();
+    i2c_send_address(SSD1306_ADDRESS_WRITE);
+    i2c_send_byte(CONTROL_MULTIPLEDATA_DATA);
+    for (int i = 0; i < 1024; i++) {
+      i2c_send_byte(framebuffer[i]);
+    }
+    i2c_send_stop();
+  #endif
   CLEAR_PIN_7
 }
 
