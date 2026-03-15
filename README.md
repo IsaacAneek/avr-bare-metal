@@ -12,19 +12,20 @@ I managed to write a couple of driver codes for different features from scratch 
  - [ ] SSD_1306_OLED 128x64
    - [x] Minimal driver
    - [x] Rasterizer
-   - [ ] High FPS
+   - [ ] High FPS (CURRENT MAX 72FPS@800Kbps I2C)
      - [ ] Try high speed I2C
        - [x] 400khz
        - [x] 800khz
+     - [x] Use vertical/horizontal addressing mode
+     - [x] Use bit-wise operation instead of modular arithmetic
+     - [x] Remove the modular arithemetic and division operation in draw_pixel() function
+     - [x] Try using -O3/-Ofast compiler optimization, disabling -Os (1ms/5FPS boost)
      - [ ] Try high speed SPI
      - [ ] SPI + DMA
-     - [ ] Use vertical/horizontal addressing mode
-     - [ ] Use bit-wise operation instead of modular arithmetic
      - [ ] Profile and mitigate function call overhead
      - [ ] Try to write a branchless code for line and triangle rasterizer
      - [ ] Try using scan-line fill instead of edge function for triangle rasterization
      - [ ] Optimize draw_pixel() using lookup tables?
-     - [ ] Remove the modular arithemetic and division operation in draw_pixel() function
    - [ ] High display refresh rate
      - [x] Increase oscillator frequency
      - [ ] Use external oscillator
