@@ -159,6 +159,10 @@ void fill_screen_with_buffer() {
   // takes roughly around 16ms@800Kbps
   // takes roughly around 26.832ms@400Kbps
   // overhead 5.168ms and I2C 10.832ms? @800Kbps
+
+  //-----Vertical addressimg mode-----
+  // takes roughly around 14.798ms@800Kbps -Os
+  // around 13.89@800Kbps -O3 (no -Os)
   SET_PIN_7
 
   #ifdef PAGE_ADDRESSING_MODE
@@ -222,7 +226,7 @@ void clear_pixel(uint8_t x, uint8_t y) {
 } 
 
 void draw_line(uint8_t start_x, uint8_t start_y, uint8_t finish_x, uint8_t finish_y) {
-  // takes roughly around 203uS
+  // takes roughly around 203uS/257uS
   SET_PIN_7
   // Bresenham's line drawing algorithm
   int dx = finish_x - start_x, dy = finish_y - start_y;
@@ -329,15 +333,15 @@ int main(void) {
   uint8_t points[] = {0, 0, 40, 13, 89, 43};
   //draw_poly_line(points, sizeof(points), true);
   //draw_triangle(15, 15, 50, 0, 63, 63);
-  //draw_line(0, 0, 25, 63);
+  draw_line(0, 0, 25, 63);
   fill_screen_with_buffer();
   // fill_screen();
   //_delay_ms(1000);
   while (1) {
     for(int i = 50; i < 100; i++) {
       //draw_line(0, 63, i, 0);
-      draw_bitmap(slick_arrow_delta, sizeof(slick_arrow_delta), 100-i, 2);
-      fill_screen_with_buffer();
+      //draw_bitmap(slick_arrow_delta, sizeof(slick_arrow_delta), 100-i, 2);
+      //fill_screen_with_buffer();
       //clear_screen();
     }
   }
