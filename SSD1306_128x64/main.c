@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include <util/delay.h>
+#include "cursor.h"
 
 #define CHECK_TWINT_SET !(TWCR & (1 << TWINT))
 #define TWI_STATUS_CODE (TWSR & 0xF8)
@@ -150,9 +151,10 @@ void fill_screen() {
 }
 
 void fill_screen_with_buffer() {
+  // -----Page addressing mode-----
   // takes roughly around 16ms@800Kbps
   // takes roughly around 26.832ms@400Kbps
-  // overhead 5.168ms and I2C 10.832ms @800Kbps
+  // overhead 5.168ms and I2C 10.832ms? @800Kbps
   SET_PIN_7
   uint16_t count = 0;
   for (int page = 0; page < 8; page++) {
@@ -283,6 +285,16 @@ void draw_poly_line(uint8_t *points, size_t size, bool is_loop) {
   PORTD &= ~(1 << PORTD7);
 }
 
+void draw_bitmap(const uint8_t *bitmap_buffer, size_t size, uint16_t x, uint8_t y) {
+  SET_PIN_7
+  uint8_t index = 0;
+  for(int j = 0; j < 2; j++)
+    for(int i = 0; i < size/2; i++) {
+      framebuffer[(j+y)*128 + i + x] = bitmap_buffer[index++];
+    }
+  CLEAR_PIN_7
+}
+
 int main(void) {
   DDRD |= (1 << PORTD7);
   PORTD &= ~(1 << PORTD7);
@@ -299,8 +311,9 @@ int main(void) {
   // fill_screen();
   //_delay_ms(1000);
   while (1) {
-    for(int i = 50; i < 128; i++) {
-      draw_line(0, 63, i, 0);
+    for(int i = 50; i < 100; i++) {
+      //draw_line(0, 63, i, 0);
+      draw_bitmap(slick_arrow_delta, sizeof(slick_arrow_delta), i, 2);
       fill_screen_with_buffer();
       //clear_screen();
     }
