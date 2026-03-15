@@ -12,7 +12,7 @@ I managed to write a couple of driver codes for different features from scratch 
  - [ ] SSD_1306_OLED 128x64
    - [x] Minimal driver
    - [x] Rasterizer
-   - [ ] High FPS (CURRENT MAX 72FPS@800Kbps I2C)
+   - [ ] High FPS (CURRENT MAX 72FPS@800Kbps I2C -O3, no -Os)
      - [ ] Try high speed I2C
        - [x] 400khz
        - [x] 800khz
