@@ -42,6 +42,13 @@ I managed to write a couple of driver codes for different features from scratch 
  - [ ] SPI
  - [ ] USB
  - [ ] Interrupt
+   - [ ] Write an ISR in pure assembly
+   - [ ] Inspect objdump of an AVR C ISR
+   - [ ] Brick program by problematic ISR
+     - [ ] delay in ISR
+     - [ ] function call in ISR
+     - [ ] nested ISR
+     - [ ] non-volatile shared flag between main() and ISR. Also check asm output with optimizations enabled/disabled. 
  - [ ] Bootloader
  - [ ] Linker script
  - [ ] Startup code
