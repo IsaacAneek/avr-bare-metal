@@ -14,7 +14,12 @@ uint8_t head = 0;
 ISR(USART_RX_vect)
 {
   cli();
+  
   uart_receive_buffer[tail] = UDR0;
+  // When interrupt-driven data reception is used,
+  // the receive complete routine must read the received data from UDRn in order to clear the RXCn flag,
+  // otherwise a new interrupt will occur once the interrupt routine terminates
+
   tail = (tail + 1) % 64;
   sei();
 }
