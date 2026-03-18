@@ -38,6 +38,9 @@ I managed to write a couple of driver codes for different features from scratch 
      - [x] GPIO based profiling
      - [ ] Timer with x1 prescaler based profiling
      - [ ] Check ASM dump
+   - [ ] Implement a simple terminal/function plotter
+     - [ ] Rasterize fonts
+     - [ ] Small UI framework 
  - [ ] ISP
  - [ ] SPI
  - [ ] USB
