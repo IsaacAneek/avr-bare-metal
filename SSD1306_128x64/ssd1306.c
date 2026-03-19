@@ -68,65 +68,6 @@ uint8_t ssd1306_init_commands[] = {
     0xAF, // display ON
 };
 
-void i2c_init() {
-  // enable internal pullups
-  DDRC &= ~((1 << PC4) | (1 << PC5));
-  PORTC |= (1 << PC4) | (1 << PC5);
-
-  // set prescaler (00) and init bit rate
-  TWSR &= ~(1 << TWPS0);
-  TWSR &= ~(1 << TWPS1);
-  TWBR = ((F_CPU / TWI_FREQ) - 16) / 2;
-  TWCR |= (1 << TWEN) | (1 << TWEA);
-}
-
-bool i2c_send_start_bit() {
-  TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN);
-  while (CHECK_TWINT_SET)
-    ;
-  if (TWI_STATUS_CODE == START) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
-bool i2c_send_address(char addr) {
-  TWDR = addr;
-  TWCR = (1 << TWINT) | (1 << TWEN);
-  while (CHECK_TWINT_SET)
-    ;
-  if (TWI_STATUS_CODE == MT_SLA_ACK) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
-bool i2c_send_byte(char byte) {
-  TWDR = byte;
-  TWCR = (1 << TWINT) | (1 << TWEN);
-  while (CHECK_TWINT_SET)
-    ;
-  if (TWI_STATUS_CODE == MT_DATA_ACK) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
-void i2c_send_stop() { TWCR = (1 << TWINT) | (1 << TWSTO) | (1 << TWEN); }
-
-bool i2c_send_buffer(uint8_t *buffer, uint8_t size) {
-  bool success = 0;
-  for (int i = 0; i < size; i++) {
-    i2c_send_start_bit();
-    success = i2c_send_byte(buffer[i]);
-  }
-  i2c_send_stop();
-  return success;
-}
-
 void ssd1306_init() {
   i2c_send_start_bit();
   i2c_send_address(SSD1306_ADDRESS_WRITE);
@@ -320,29 +261,4 @@ void draw_bitmap(const uint8_t *bitmap_buffer, size_t size, uint16_t x, uint8_t 
       framebuffer[(j+y)*128 + i + x] = bitmap_buffer[index++];
     }
   CLEAR_PIN_7
-}
-
-int main(void) {
-  DDRD |= (1 << PORTD7);
-  PORTD &= ~(1 << PORTD7);
-  i2c_init();
-  _delay_ms(100);
-  ssd1306_init();
-  _delay_ms(500);
-  clear_screen();
-  uint8_t points[] = {0, 0, 40, 13, 89, 43};
-  //draw_poly_line(points, sizeof(points), true);
-  //draw_triangle(15, 15, 50, 0, 63, 63);
-  draw_line(0, 0, 25, 63);
-  fill_screen_with_buffer();
-  // fill_screen();
-  //_delay_ms(1000);
-  while (1) {
-    for(int i = 50; i < 100; i++) {
-      //draw_line(0, 63, i, 0);
-      //draw_bitmap(slick_arrow_delta, sizeof(slick_arrow_delta), 100-i, 2);
-      //fill_screen_with_buffer();
-      //clear_screen();
-    }
-  }
 }
