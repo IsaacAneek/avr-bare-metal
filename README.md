@@ -40,7 +40,10 @@ I managed to write a couple of driver codes for different features from scratch 
      - [ ] Check ASM dump
    - [ ] Implement a simple terminal/function plotter
      - [ ] Rasterize fonts
-     - [ ] Small UI framework 
+     - [ ] Small UI framework
+   - [ ] Refactor code
+     - [ ] Decouple I2C logic, display driver logic and GFX functions
+     - [ ] Support portability across different AVR MCUs/different display modules
  - [ ] ISP
  - [ ] SPI
  - [ ] USB
