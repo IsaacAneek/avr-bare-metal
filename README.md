@@ -44,6 +44,11 @@ I managed to write a couple of driver codes for different features from scratch 
    - [ ] Refactor code
      - [ ] Decouple I2C logic, display driver logic and GFX functions
      - [ ] Support portability across different AVR MCUs/different display modules
+   - [ ] Debug
+     - [ ] font_converted[][] isn't copied to the framebuffer. Yet when i send the framebuffer
+           to the display (framebuffer is initiliazed with 0), it shows font glyphs. Possible cause : Memory corruption
+       - [ ] Check starting and ending addresses of font_converted[][] and framebuffer[]
+       - [ ] Analyze stack usage of main() 
  - [ ] ISP
  - [ ] SPI
  - [ ] USB
