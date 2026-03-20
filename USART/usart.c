@@ -2,6 +2,8 @@
 #include <string.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
+#include <stdbool.h>
+#include <usart.h>
 
 #define UART_INTERRUPT_BASED
 #define BAUD_RATE 9600
@@ -24,9 +26,10 @@ ISR(USART_RX_vect)
   sei();
 }
 
-void usart_init(uint16_t ubrr)
+void usart_init()
 {
   sei();
+  uint16_t ubrr = UBRR0_VAL;
   // Initialize Baud rate
   UBRR0L = (uint8_t)(ubrr & 0xFF);
   UBRR0H = (uint8_t)(ubrr >> 8);
@@ -123,50 +126,4 @@ void usart_println(char *str)
   usart_puts(str);
   usart_putc('\r');
   usart_putc('\n');
-}
-
-int main(void)
-{
-  // Serial.println("SOMETHING");
-
-  usart_init(UBRR0_VAL);
-  // usart_puts("Hello World\n\0");
-  char buffer[40] = "\nDo you wanna proceed?\r\n";
-  usart_puts(buffer);
-
-  while (1)
-  {
-    if (usart_is_byte_available())
-    {
-      usart_puts("A byte is here yeeeh\r\n");
-
-      if (usart_is_string_available())
-      {
-        usart_gets(buffer);
-        usart_puts(buffer);
-        if (strcasecmp(buffer, "YES\r\n\0") == 0)
-        {
-          usart_println("Proceeding......!");
-        }
-        else
-        {
-          usart_println("Skipping procedure....!");
-        }
-
-        // converts the response from the terminal into hex
-        // just for debugging purposes
-        // int i = 0;
-        // do
-        // {
-        //   usart_putHex(buffer[i]);
-        //   usart_putc(' ');
-        // } while (buffer[i++] != '\0');
-        // usart_putc('\r');
-        // char c = usart_getc();
-        // usart_putc(c);
-      }
-    }
-    _delay_ms(1000);
-  }
-  return 0;
 }

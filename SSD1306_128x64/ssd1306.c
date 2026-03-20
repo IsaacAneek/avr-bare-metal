@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <util/delay.h>
 #include "cursor.h"
+#include <ssd1306.h>
 
 #define CHECK_TWINT_SET !(TWCR & (1 << TWINT))
 #define TWI_STATUS_CODE (TWSR & 0xF8)
@@ -95,7 +96,7 @@ void fill_screen() {
   }
 }
 
-void fill_screen_with_buffer() {
+void fill_screen_with_buffer(const uint8_t *framebuffer, size_t size) {
   // -----Page addressing mode-----
   // takes roughly around 16ms@800Kbps
   // takes roughly around 26.832ms@400Kbps
@@ -131,7 +132,7 @@ void fill_screen_with_buffer() {
     i2c_send_start_bit();
     i2c_send_address(SSD1306_ADDRESS_WRITE);
     i2c_send_byte(CONTROL_MULTIPLEDATA_DATA);
-    for (int i = 0; i < 1024; i++) {
+    for (int i = 0; i < size; i++) {
       i2c_send_byte(framebuffer[i]);
     }
     i2c_send_stop();

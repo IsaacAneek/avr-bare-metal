@@ -5,6 +5,7 @@
 #include <usart.h>
 #include "font8x8_basic.h"
 
+
 void convert_to_column_major(const uint8_t source[][8], uint8_t dest[][8]) {
   uint8_t byte = 0;
   uint8_t col = 0;
@@ -15,12 +16,12 @@ void convert_to_column_major(const uint8_t source[][8], uint8_t dest[][8]) {
       for(int j = 0; j < 8; j++) {
         byte |= ((source[i][j] >> bit_pos) & 1) << j;
       }
-
+      
       if(col == 8) {
         col = 0;
         row++;
       }
-
+      
       dest[row][col++] = byte;
     }
   }
@@ -34,11 +35,12 @@ int main(void)
   int count = 0;
   uint8_t font_converted[95][8];
   convert_to_column_major(font8x8_basic, font_converted);
-  for(int i = 33; i < 37; i++) {
-    for(int j = 0; j < 8; j++) {
-      framebuffer[count++] = font_converted[i][j];
-    }
-  }
+  // clear_screen();
+  // for(int i = 33; i < 37; i++) {
+    //   for(int j = 0; j < 8; j++) {
+      //     framebuffer[count++] = font_converted[i][j];
+      //   }
+  // }
   fill_screen_with_buffer(framebuffer, sizeof(framebuffer));
   while(true);
 }

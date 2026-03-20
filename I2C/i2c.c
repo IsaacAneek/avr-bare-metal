@@ -2,6 +2,7 @@
 #include <avr/io.h>
 #include <stdbool.h>
 #include <util/delay.h>
+#include <i2c.h>
 
 #define CHECK_TWINT_SET !(TWCR & (1 << TWINT))
 #define TWI_STATUS_CODE (TWSR & 0xF8)
